@@ -3,13 +3,15 @@ app: aibom-lab-code-review-agent
 owner: developer-platform (lab)
 business_criticality: high
 environment: lab
-exposure: internal               # triggered by any pull request author, including outside contributors
+exposure: internet-facing        # phase 6 (PB-08): any pull request author, including outside contributors, can trigger it
 authentication: repository access
+tool_gateway: allow-list, schema check, call budget of 10, audit trail (phase 6, PB-06)
 autonomy: acts-alone             # runs tools without human approval
 identities:
   - name: ANTHROPIC_API_KEY
     used_for: hosted model calls
-    stored_in: local .env, loaded into the process environment
+    stored_in: local .env; never passed to tool processes, which get a minimal environment (phase 6, PB-07)
+    limits: per-app key with a monthly spend limit
   - name: GITHUB_TOKEN (intended deployment)
     used_for: posting review comments
-    scope: repository write       # broader than a reviewer needs
+    scope: read code, write pull request comments   # narrowed in phase 6 (PB-08)

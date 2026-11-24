@@ -1,8 +1,8 @@
 # aibom-lab-code-review-agent
 
-An AI agent that reviews pull request diffs for security problems, using tools to read files, run shell commands and call git. It runs on **Claude** (hosted, Anthropic API) or **Qwen 2.5 Coder 1.5B** (local, Ollama).
+An AI agent that reviews pull request diffs for security problems, using read-only tools behind a gateway to read files and git history. It runs on **Claude** (hosted, Anthropic API) or **Qwen 2.5 Coder 1.5B** (local, Ollama).
 
-> **Deliberately vulnerable lab app. Run it only on the lab's own diffs in `workspace/prs/`.** It is one of four sample apps for the [CS54 AI-BOM and AI security posture lab](https://github.com/pankhuri-labs/CaseStudies/tree/main/CS54-AI-BOM-and-AI-Security-Posture-Lab). Its planted weaknesses are listed in [KNOWN-WEAKNESSES.md](KNOWN-WEAKNESSES.md).
+> **Deliberately vulnerable lab app. Run it only on the lab's own diffs in `workspace/prs/`.** It is one of four sample apps for the [CS54 AI-BOM and AI security posture lab](https://github.com/pankhuri-labs/CaseStudies/tree/main/CS54-AI-BOM-and-AI-Security-Posture-Lab). Its planted weaknesses, and the phase 6 fixes, are listed in [KNOWN-WEAKNESSES.md](KNOWN-WEAKNESSES.md).
 
 ## What it is, in AI-BOM terms
 
@@ -11,9 +11,9 @@ An AI agent that reviews pull request diffs for security problems, using tools t
 | Models | `claude-haiku-5-5` (hosted, Anthropic) or `qwen2.5-coder:1.5b` (local, Ollama) |
 | Prompt | `prompts/system.txt` |
 | Sources | Pull request diff and comments (untrusted: any contributor writes them) |
-| Sinks | Review text; shell; git |
-| Tools | `list_files`, `read_file`, `run_shell`, `git` |
-| Identity | `ANTHROPIC_API_KEY` in the process environment; intended `GITHUB_TOKEN` with write scope |
+| Sinks | Review text; read-only git (diff, log, show) |
+| Tools | `list_files`, `read_file`, `git_read`, all through `ToolGateway` |
+| Identity | `ANTHROPIC_API_KEY`, never passed to tools; intended `GITHUB_TOKEN` limited to reading code and writing PR comments |
 | Autonomy | Acts alone, no human approval |
 
 ## Run it on a Mac
@@ -41,5 +41,5 @@ The tests use a scripted fake model, so they need no model and no key:
 LLM_BACKEND=fake python -m pytest -q
 ```
 
-The attack tests in `tests/test_attacks.py` show as `x` (expected failure): each one asserts the safe behaviour and fails today because the weakness is planted. To see why each attack succeeds, run `python -m pytest -q --runxfail tests/test_attacks.py`.
+The attack tests in `tests/test_attacks.py` assert the safe behaviour. In phase 3 they were expected failures, because the weaknesses were planted. Phase 6 fixed them, so they now pass and prove each fix holds. To see the attacks succeed, check out the last commit before the phase 6 fix PR and run `python -m pytest -q --runxfail tests/test_attacks.py`.
 
