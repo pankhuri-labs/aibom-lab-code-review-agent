@@ -1,3 +1,42 @@
 # aibom-lab-code-review-agent
 
-Sample app for the CS54 AI-BOM security lab. See the phase 1 pull request.
+An AI agent that reviews pull request diffs for security problems, using tools to read files, run shell commands and call git. It runs on **Claude** (hosted, Anthropic API) or **Qwen 2.5 Coder 1.5B** (local, Ollama).
+
+> **Deliberately vulnerable lab app. Run it only on the lab's own diffs in `workspace/prs/`.** It is one of four sample apps for the [CS54 AI-BOM and AI security posture lab](https://github.com/pankhuri-labs/CaseStudies/tree/main/CS54-AI-BOM-and-AI-Security-Posture-Lab). Its planted weaknesses are listed in [KNOWN-WEAKNESSES.md](KNOWN-WEAKNESSES.md).
+
+## What it is, in AI-BOM terms
+
+| AI-BOM field | Value |
+| --- | --- |
+| Models | `claude-haiku-5-5` (hosted, Anthropic) or `qwen2.5-coder:1.5b` (local, Ollama) |
+| Prompt | `prompts/system.txt` |
+| Sources | Pull request diff and comments (untrusted: any contributor writes them) |
+| Sinks | Review text; shell; git |
+| Tools | `list_files`, `read_file`, `run_shell`, `git` |
+| Identity | `ANTHROPIC_API_KEY` in the process environment; intended `GITHUB_TOKEN` with write scope |
+| Autonomy | Acts alone, no human approval |
+
+## Run it on a Mac
+
+1. Python 3.11 or later:
+   ```
+   python3 -m venv .venv && source .venv/bin/activate
+   pip install -r requirements.txt
+   cp .env.example .env
+   ```
+2. Pick a model:
+   - **Local (free):** install Ollama ([ollama.com/download](https://ollama.com/download) or `brew install ollama`), then `ollama pull qwen2.5-coder:1.5b` (about 1 GB). Keep `LLM_BACKEND=ollama` in `.env`.
+   - **Claude:** create a key in the Anthropic Console and set a low monthly spend limit there. Put it only in your local `.env` as `ANTHROPIC_API_KEY=...` and set `LLM_BACKEND=anthropic`. Never paste the key in chat or commit it.
+3. Load the settings and run a review:
+   ```
+   set -a; source .env; set +a
+   python -m agent.run_review prs/pr-000-clean.diff
+   ```
+
+## Tests
+
+The tests use a scripted fake model, so they need no model and no key:
+
+```
+LLM_BACKEND=fake python -m pytest -q
+```

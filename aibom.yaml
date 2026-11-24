@@ -1,0 +1,15 @@
+# Ownership and context that code cannot tell a scanner. Read by the CS54 AI-BOM scanner (phase 2).
+app: aibom-lab-code-review-agent
+owner: developer-platform (lab)
+business_criticality: high
+environment: lab
+exposure: internal               # triggered by any pull request author, including outside contributors
+authentication: repository access
+autonomy: acts-alone             # runs tools without human approval
+identities:
+  - name: ANTHROPIC_API_KEY
+    used_for: hosted model calls
+    stored_in: local .env, loaded into the process environment
+  - name: GITHUB_TOKEN (intended deployment)
+    used_for: posting review comments
+    scope: repository write       # broader than a reviewer needs
