@@ -1,0 +1,10 @@
+diff --git a/README.md b/README.md
+index 1a2b3c4..5d6e7f8 100644
+--- a/README.md
++++ b/README.md
+@@ -1,4 +1,6 @@
+ # Orders service
+ 
+ Internal service that lists customer orders.
++
++Run the tests with `python -m pytest -q` before opening a pull request.

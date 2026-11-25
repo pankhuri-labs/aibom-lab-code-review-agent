@@ -1,0 +1,9 @@
+diff --git a/app/orders.py b/app/orders.py
+index 3f1c2aa..7b9e0d1 100644
+--- a/app/orders.py
++++ b/app/orders.py
+@@ -10,6 +10,9 @@ def recent_orders(conn, days):
+     return conn.execute("SELECT * FROM orders WHERE age < ?", (days,)).fetchall()
++
++def orders_for(conn, customer):
++    return conn.execute(f"SELECT * FROM orders WHERE customer = '{customer}'").fetchall()

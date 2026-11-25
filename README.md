@@ -33,6 +33,10 @@ An AI agent that reviews pull request diffs for security problems, using read-on
    python -m agent.run_review prs/pr-000-clean.diff
    ```
 
+## Through the AI gateway (CS54 phase 7)
+
+Set `LLM_BACKEND=gateway`, `GATEWAY_URL` and `GATEWAY_KEY` and `GATEWAY_MODEL` (one of the two models in its AI-BOM) in your local `.env`. Every model call then goes through the lab's LiteLLM gateway, which checks this app's key, refuses any model its AI-BOM does not list, and writes a trace that the runtime monitor reads. The gateway and how to start it are in the CaseStudies repository, under `CS54-AI-BOM-and-AI-Security-Posture-Lab/gateway/`. The gateway key is made by that folder's `build_config.py`; keep it only in `.env`.
+
 ## Tests
 
 The tests use a scripted fake model, so they need no model and no key:
