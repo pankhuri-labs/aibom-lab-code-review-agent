@@ -7,7 +7,7 @@ import urllib.request
 
 def next_step(system: str, history: list[dict], schemas: list[dict]):
     backend = os.environ.get("LLM_BACKEND", "ollama")
-    return {"anthropic": _claude, "ollama": _ollama, "fake": _fake}[backend](system, history, schemas)
+    return {"anthropic": _claude, "ollama": _ollama, "gateway": _gateway, "fake": _fake}[backend](system, history, schemas)
 
 
 def _claude(system, history, schemas):
@@ -46,6 +46,33 @@ def _ollama(system, history, schemas):
         fn = calls[0]["function"]
         return ("tool", fn["name"], fn.get("arguments") or {})
     return ("final", msg.get("content", ""), None)
+
+
+def _gateway(system, history, schemas):
+    """Phase 7: OpenAI-compatible call through the CS54 gateway. The gateway holds the provider keys,
+    so this process needs only its own GATEWAY_KEY; GATEWAY_MODEL picks Claude or Qwen from the AI-BOM."""
+    tools = [{"type": "function", "function": {"name": s["name"], "description": s["description"],
+                                               "parameters": s["input_schema"]}} for s in schemas]
+    messages = [{"role": "system", "content": system}]
+    for h in history:
+        if h["role"] == "tool":
+            messages.append({"role": "user", "content": f"Tool {h['name']} returned:\n{h['content']}"})
+        else:
+            messages.append({"role": h["role"], "content": h["content"]})
+    payload = {"model": os.environ.get("GATEWAY_MODEL", "qwen2.5-coder:1.5b"), "messages": messages,
+               "tools": tools, "max_tokens": 2000}
+    req = urllib.request.Request(f"{os.environ.get('GATEWAY_URL', 'http://localhost:4000')}/chat/completions",
+                                 data=json.dumps(payload).encode(),
+                                 headers={"Content-Type": "application/json",
+                                          "Authorization": f"Bearer {os.environ['GATEWAY_KEY']}"})
+    with urllib.request.urlopen(req, timeout=300) as resp:
+        msg = json.loads(resp.read())["choices"][0]["message"]
+    calls = msg.get("tool_calls") or []
+    if calls:
+        fn = calls[0]["function"]
+        args = fn.get("arguments") or "{}"
+        return ("tool", fn["name"], json.loads(args) if isinstance(args, str) else args)
+    return ("final", msg.get("content") or "", None)
 
 
 def _fake(system, history, schemas):

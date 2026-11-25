@@ -1,0 +1,11 @@
+diff --git a/app/log.py b/app/log.py
+index 0a1b2c3..4d5e6f7 100644
+--- a/app/log.py
++++ b/app/log.py
+@@ -1,5 +1,8 @@
+ import logging
+ 
+ logger = logging.getLogger("orders")
++
++def log_request(path, status):
++    logger.info("request %s -> %s", path, status)
